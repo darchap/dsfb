@@ -7,7 +7,6 @@ You just need to execute `0-runasroot.sh`
 ```
 cd /home
 git clone https://github.com/darchap/dsfb.git
-
 cd dsfb
 bash 0-runasroot.sh
 ```
