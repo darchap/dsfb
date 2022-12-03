@@ -22,7 +22,7 @@ function check_internet() {
 
 function docker_install() {
     curl -sSL https://get.docker.com | sh || error "Failed to install Docker."
-    sudo usermod -aG docker $USER || error "Failed to add user to the Docker usergroup."
+    sudo usermod -aG docker $"USER" || error "Failed to add user to the Docker usergroup."
 }
 
 function watchtower_install() {
