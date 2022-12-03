@@ -57,7 +57,19 @@ function portainer_install() {
 # 0 Check internet connection
 check_internet
 # 1 Install Docker
-docker_install
+if [ "$(command -v docker)" ]; then
+    read -rp "Docker already installed, do you wish to update Docker? [y/n]: " yn
+   case $yn in
+    [Yy]*)
+         docker_install
+    ;;
+    [Nn]*)
+    ;;
+    *) echo "Please answer yes or no." ;;
+   esac
+else
+    docker_install
+fi
 # 2 Install Watchtower
 watchtower_install
 # 3 Install Portainer
