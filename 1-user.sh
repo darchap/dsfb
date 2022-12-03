@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # ---------------------------------------------------------------------------------
 # Purpose - Script to get started with a new user and basic docker stuff on a fresh
