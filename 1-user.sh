@@ -12,12 +12,12 @@ function error() {
 
 function check_internet() {
     printf "Checking if you are online..."
-    wget -q --spider http://github.com
-    if [ $? -eq 0 ]; then
+    if wget -q --spider http://github.com ; then
         echo "Online. Continuing."
     else
         error "Offline. Go connect to the internet then run the script again."
     fi
+    echo -e "\n"
 }
 
 function docker_install() {
