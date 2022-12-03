@@ -35,7 +35,7 @@ function watchtower_install() {
         sudo docker rmi $watchtower_name || error "Failed to remove/untag images from the container!"
     fi
     sudo docker pull containrrr/watchtower || error "Failed to pull latest Watchtower docker image!"
-    sudo docker run -d --name watchtower -v /var/run/docker.sock:/var/run/docker.sock --restart unless-stopped containrrr/watchtower --schedule "0 0 4 * * *" --debug || error "Failed to run Watchtower docker image!"
+    sudo docker run -d --name watchtower -v /var/run/docker.sock:/var/run/docker.sock --restart unless-stopped containrrr/watchtower --schedule "0 0 4 * * *" --debug --cleanup || error "Failed to run Watchtower docker image!"
 }
 
 function portainer_install() {
