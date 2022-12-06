@@ -7,50 +7,70 @@
 # ---------------------------------------------------------------------------------
 
 function error() {
-    echo -e "\n\\e[91m$1\\e[39m"
+    echo -e "\n\e[91m$1\e[97m"
+}
+
+function success() {
+    echo -e "\n\e[92m$1\e[97m"
 }
 
 function check_internet() {
-    printf "Checking if you are online..."
-    if wget -q --spider http://github.com ; then
+    echo "Checking if you are online..."
+    if wget -q --spider http://github.com; then
         echo "Online. Continuing."
     else
         error "Offline. Go connect to the internet then run the script again."
     fi
-    echo -e "\n"
 }
 
 function docker_install() {
     curl -sSL https://get.docker.com | sh || error "Failed to install Docker."
-    sudo usermod -aG docker $"USER" || error "Failed to add user to the Docker usergroup."
+    sudo usermod -aG docker "$USER" || error "Failed to add user to the Docker usergroup."
 }
 
 function watchtower_install() {
-    watchtower_pid=$(docker ps | grep watchtower | awk '{print $1}')
-    watchtower_name=$(docker ps | grep watchtower | awk '{print $2}')
+    watchtower_id=$(docker ps -a | grep watchtower | awk '{print $1}')
+    watchtower_name=$(docker ps -a | grep watchtower | awk '{print $2}')
 
-    if [[ containrrr/watchtower = $watchtower_name ]]; then
-        sudo docker stop $watchtower_pid || error "Failed to stop Watchtower!"
-        sudo docker rm $watchtower_pid || error "Failed to remove Watchtower container!"
-        sudo docker rmi $watchtower_name || error "Failed to remove/untag images from the container!"
+    if [[ containrrr/watchtower = "$watchtower_name" ]]; then
+        echo -e 'Stopping Watchtower container...\n'
+        sudo docker stop "$watchtower_id" >/dev/null || error "Failed to stop Watchtower!"
+        echo -e 'Removing Watchtower container...\n'
+        sudo docker rm "$watchtower_id" >/dev/null || error "Failed to remove Watchtower container!"
+        echo -e 'Removing Watchtower image...\n'
+        sudo docker rmi "$watchtower_name" >/dev/null || error "Failed to remove/untag images from the container!"
     fi
-    sudo docker pull containrrr/watchtower || error "Failed to pull latest Watchtower docker image!"
-    sudo docker run -d --name watchtower -v /var/run/docker.sock:/var/run/docker.sock --restart unless-stopped containrrr/watchtower --schedule "0 0 4 * * *" --debug --cleanup || error "Failed to run Watchtower docker image!"
+    sudo docker pull containrrr/watchtower >/dev/null || error "Failed to pull latest Watchtower docker image!"
+    echo -e 'Downloading Watchtower image...\n'
+    if sudo docker run -d --name watchtower -v /var/run/docker.sock:/var/run/docker.sock --restart unless-stopped containrrr/watchtower --schedule "0 0 4 * * *" --debug --cleanup; then
+        success 'Watchtower container deployed\n'
+    else
+        error 'Failed to run Watchtower docker image!'
+    fi
 }
 
 function portainer_install() {
 
-    portainer_pid=$(docker ps | grep portainer-ce | awk '{print $1}')
-    portainer_name=$(docker ps | grep portainer-ce | awk '{print $2}')
+    portainer_id=$(docker ps -a | grep portainer-ce | awk '{print $1}')
+    portainer_name=$(docker ps -a | grep portainer-ce | awk '{print $2}')
 
-    if [[ portainer/portainer-ce = $portainer_name ]]; then
-        sudo docker stop $portainer_pid || error "Failed to stop Portainer!"
-        sudo docker rm $portainer_pid || error "Failed to remove Portainer container!"
-        sudo docker rmi $portainer_name || error "Failed to remove/untag images from the container!"
+    if [[ portainer/portainer-ce = "$portainer_name" ]]; then
+        echo -e 'Stopping Portainer container...\n'
+        sudo docker stop "$portainer_id" >/dev/null || error "Failed to stop Portainer!"
+        echo -e 'Removing Portainer container...\n'
+        sudo docker rm "$portainer_id" >/dev/null || error "Failed to remove Portainer container!"
+        echo -e 'Removing Portainer image...\n'
+        sudo docker rmi "$portainer_name" >/dev/null || error "Failed to remove/untag images from the container!"
     fi
-    sudo docker volume create portainer_data || error "Failed to create Portainer volume!"
-    sudo docker pull portainer/portainer-ce || error "Failed to pull latest Portainer docker image!"
-    sudo docker run -d -p 9000:9000 -p 9443:9443 --name=portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce || error "Failed to execute newer version of Portainer!"
+    echo -e 'Creating Portainer volume...\n'
+    sudo docker volume create portainer_data >/dev/null || error "Failed to create Portainer volume!"
+    echo -e 'Downloading Portainer image...\n'
+    sudo docker pull portainer/portainer-ce >/dev/null || error "Failed to pull latest Portainer docker image!"
+    if sudo docker run -d -p 9000:9000 -p 9443:9443 --name=portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce; then
+        success 'Portainer container deployed\n'
+    else
+        error 'Failed to execute newer version of Portainer!'
+    fi
 
 }
 
@@ -58,15 +78,15 @@ function portainer_install() {
 check_internet
 # 1 Install Docker
 if [ "$(command -v docker)" ]; then
-    read -rp "Docker already installed, do you wish to update Docker? [y/n]: " yn
-   case $yn in
+    read -rp 'Docker already installed, do you wish to update Docker?[y/n]: \n' yn
+    case $yn in
     [Yy]*)
-         docker_install
-    ;;
-    [Nn]*)
-    ;;
-    *) echo "Please answer yes or no." ;;
-   esac
+        docker_install
+        ;;
+    [Nn]*) ;;
+
+    *) echo 'Please answer yes or no.' ;;
+    esac
 else
     docker_install
 fi
