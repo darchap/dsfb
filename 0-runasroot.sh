@@ -117,8 +117,9 @@ function add_user() {
         [Nn]*)
             while true; do
                 read -rp "Please enter a non-root username: " username
-                if [[ $username = root ]]; then
+                if [ "$username" = root ]; then
                     error "Not a valid username."
+                    exit 1
                 fi
                 if ! id "$username" &>/dev/null; then
                     error "$username does not exist!"
