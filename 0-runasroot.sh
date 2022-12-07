@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # ---------------------------------------------------------------------------------
 # Purpose - Script to get started with a new user and basic docker stuff on a fresh
@@ -13,7 +13,11 @@ userscript="./1-user.sh"
 set -e
 
 function error() {
-    echo -e "\n\\e[91m$1\\e[39m"
+    echo -e "\n\e[91m$1\e[97m"
+}
+
+function success() {
+    echo -e "\n\e[92m$1\e[97m"
 }
 
 function timeout_reboot() {
@@ -31,7 +35,6 @@ function check_root() {
 }
 
 function check_distro() {
-    notice=""
     case $(. /etc/os-release && echo "$ID") in
     *debian*)
         distro="debian"
@@ -52,33 +55,32 @@ function check_distro() {
 function add_user() {
     echo -e "\n======================================="
     while true; do
-        read -p "Do you wish to add a non-root user?[y/n]: " yn
+        read -rp "Do you wish to add a non-root user?[y/n]: " yn
         case $yn in
         [Yy]*)
             while true; do
-                read -p "Please enter username: " username
+                read -rp "Please enter username: " username
                 if [[ "${username,,}" =~ ^[a-z_]([a-z0-9_-]{0,31}|[a-z0-9_-]{0,30}\$)$ ]]; then
                     break
                 fi
                 error "Not a valid username."
             done
             while true; do
-                read -s -p "Please enter password: " password
+                read -rps "Please enter password: " password
                 echo
-                read -s -p "Repeat password: " password2
-                if [[ $password = $password2 ]]; then
+                read -rps "Repeat password: " password2
+                if [[ $password = "$password2" ]]; then
                     break
                 else
-                    error "Passwords dont match"
+                    error "Passwords dont match."
                 fi
             done
             if id "$username" &>/dev/null; then
                 error "$username already exists!"
             else
-                pass=$(perl -e 'print crypt($ARGV[0], "password")' $password)
-                useradd -s /bin/bash -d /home/$username/ -m -G sudo -p "$pass" "$username"
-                if [[ $? -eq 0 ]]; then
-                    echo -e "\nUser has been added to system!"
+                pass=$(perl -e 'print crypt($ARGV[0], "password")' "$password")
+                if useradd -s /bin/bash -d /home/"$username"/ -m -G sudo -p "$pass" "$username"; then
+                    success -e "\nUser has been added to system!"
                     useradded=1
                 else
                     error "Failed to add a user!"
@@ -89,7 +91,7 @@ function add_user() {
             ;;
         [Nn]*)
             while true; do
-                read -p "Please enter a non-root username: " username
+                read -rp "Please enter a non-root username: " username
                 if [[ $username = root ]]; then
                     error "Not a valid username."
                 fi
