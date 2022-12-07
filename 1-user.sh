@@ -78,15 +78,18 @@ function portainer_install() {
 check_internet
 # 1 Install Docker
 if [ "$(command -v docker)" ]; then
-    read -rp 'Docker already installed, do you wish to update Docker?[y/n]: \n' yn
+    echo -e '\n'
+    read -rp 'Docker already installed, do you wish to update Docker?[y/n]: ' yn
     case $yn in
     [Yy]*)
         docker_install
         ;;
-    [Nn]*) ;;
-
+    [Nn]*)
+        sudo usermod -aG docker "$USER" || error "Failed to add user to the Docker usergroup."
+        ;;
     *) echo 'Please answer yes or no.' ;;
     esac
+    echo -e '\n'
 else
     docker_install
 fi
