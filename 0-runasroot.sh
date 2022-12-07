@@ -78,7 +78,7 @@ function check_distro() {
 }
 
 function add_user() {
-    echo -e "\n======================================="
+    echo -e "\n============================================"
     while true; do
         read -rp "Do you wish to add a non-root user?[y/n]: " yn
         case $yn in
@@ -91,9 +91,9 @@ function add_user() {
                 error "Not a valid username."
             done
             while true; do
-                read -rps "Please enter password: " password
+                read -s -rp "Please enter password: " password
                 echo
-                read -rps "Repeat password: " password2
+                read -s -rp "Repeat password: " password2
                 if [[ $password = "$password2" ]]; then
                     break
                 else
@@ -105,7 +105,7 @@ function add_user() {
             else
                 pass=$(perl -e 'print crypt($ARGV[0], "password")' "$password")
                 if useradd -s /bin/bash -d /home/"$username"/ -m -G sudo -p "$pass" "$username"; then
-                    success -e "\nUser has been added to system!"
+                    success "\nUser has been added to system!"
                     useradded=1
                 else
                     error "Failed to add a user!"
@@ -132,7 +132,7 @@ function add_user() {
         *) echo "Please answer yes or no." ;;
         esac
     done
-    echo -e "=======================================\n"
+    echo -e "============================================\n"
 }
 
 # 0 Check root user and os
@@ -144,19 +144,16 @@ add_user
 
 # 2 Install docker, watchtower and portainer as user and then reboot
 if [[ $useradded -eq 1 ]]; then
-    if [[ $(grep "^$username.*ALL=(ALL).*NOPASSWD:.*ALL" /etc/sudoers) ]]; then
-        sudo -u "$username" bash $userscript
-    elif [[ $(grep "^$username.*ALL=(ALL)" /etc/sudoers) ]]; then
-        sed -i "/^$username ALL=(ALL)/d" /etc/sudoers
-        echo "$username ALL=(ALL) NOPASSWD: ALL" | sudo tee -a /etc/sudoers >/dev/null
-        sudo -u "$username" bash $userscript
-        sed -i "s/^$username ALL=(ALL).*/$username ALL=(ALL)/" /etc/sudoers
+    if [[ $(sudo grep "^$username.*ALL=(ALL).*NOPASSWD:.*ALL.*" /etc/sudoers) ]]; then
+        :
+    elif [[ $(sudo grep "^$username.*ALL=(ALL).*ALL" /etc/sudoers) ]]; then
+        sudo sed -i "/^$username.*ALL=(ALL).*/c\\$username ALL=(ALL) NOPASSWD: ALL" /etc/sudoers
     else
         echo "$username ALL=(ALL) NOPASSWD: ALL" | sudo tee -a /etc/sudoers >/dev/null
-        sudo -u "$username" bash $userscript
     fi
-    if [[ $? -eq 0 ]]; then
-        echo '\e[4mSSH (changes will take effect on next boot).\e[24m'
+    if sudo -u "$username" bash $userscript; then
+        sudo sed -i "/^$username.*ALL=(ALL).*NOPASSWD:.*ALL.*/d" /etc/sudoers
+        echo -e '\e[4m\nSSH settings(changes will take effect on next boot).\e[24m'
         check_ssh_root
         check_ssh_port
         timeout_reboot
