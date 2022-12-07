@@ -34,6 +34,18 @@ function check_root() {
     fi
 }
 
+function check_ssh_root() {
+    if grep -q '^PermitRootLogin.yes' /etc/ssh/sshd_config; then
+        read -rp 'You have enabled root login through SSH, do you wish to disable it now?[y/n]: ' yn
+        case $yn in
+        [Yy]*) sudo sed -i '/PermitRootLogin/c\#PermitRootLogin no' /etc/ssh/sshd_config ;;
+        [Nn]*) echo -e "\e[5mIs strongly advised to disable root login!\e[25m\n" ;;
+        *) echo "Please answer yes or no." ;;
+        esac
+
+    fi
+}
+
 function check_distro() {
     case $(. /etc/os-release && echo "$ID") in
     *debian*)
