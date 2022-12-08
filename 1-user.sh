@@ -34,15 +34,15 @@ function watchtower_install() {
 
     if [[ containrrr/watchtower = "$watchtower_name" ]]; then
         echo -e 'Stopping Watchtower container...\n'
-        sudo docker stop "$watchtower_id" >/dev/null || error "Failed to stop Watchtower!"
+        docker stop "$watchtower_id" >/dev/null || error "Failed to stop Watchtower!"
         echo -e 'Removing Watchtower container...\n'
-        sudo docker rm "$watchtower_id" >/dev/null || error "Failed to remove Watchtower container!"
+        docker rm "$watchtower_id" >/dev/null || error "Failed to remove Watchtower container!"
         echo -e 'Removing Watchtower image...\n'
-        sudo docker rmi "$watchtower_name" >/dev/null || error "Failed to remove/untag images from the container!"
+        docker rmi "$watchtower_name" >/dev/null || error "Failed to remove/untag images from the container!"
     fi
-    sudo docker pull containrrr/watchtower >/dev/null || error "Failed to pull latest Watchtower docker image!"
+    docker pull containrrr/watchtower >/dev/null || error "Failed to pull latest Watchtower docker image!"
     echo -e 'Downloading Watchtower image...\n'
-    if sudo docker run -d --name watchtower -v /var/run/docker.sock:/var/run/docker.sock --restart unless-stopped containrrr/watchtower --schedule "0 0 4 * * *" --debug --cleanup; then
+    if docker run -d --name watchtower -v /var/run/docker.sock:/var/run/docker.sock --restart unless-stopped containrrr/watchtower --schedule "0 0 4 * * *" --debug --cleanup; then
         success 'Watchtower container deployed\n'
     else
         error 'Failed to run Watchtower docker image!'
@@ -56,22 +56,21 @@ function portainer_install() {
 
     if [[ portainer/portainer-ce = "$portainer_name" ]]; then
         echo -e 'Stopping Portainer container...\n'
-        sudo docker stop "$portainer_id" >/dev/null || error "Failed to stop Portainer!"
+        docker stop "$portainer_id" >/dev/null || error "Failed to stop Portainer!"
         echo -e 'Removing Portainer container...\n'
-        sudo docker rm "$portainer_id" >/dev/null || error "Failed to remove Portainer container!"
+        docker rm "$portainer_id" >/dev/null || error "Failed to remove Portainer container!"
         echo -e 'Removing Portainer image...\n'
-        sudo docker rmi "$portainer_name" >/dev/null || error "Failed to remove/untag images from the container!"
+        docker rmi "$portainer_name" >/dev/null || error "Failed to remove/untag images from the container!"
     fi
     echo -e 'Creating Portainer volume...\n'
-    sudo docker volume create portainer_data >/dev/null || error "Failed to create Portainer volume!"
+    docker volume create portainer_data >/dev/null || error "Failed to create Portainer volume!"
     echo -e 'Downloading Portainer image...\n'
-    sudo docker pull portainer/portainer-ce >/dev/null || error "Failed to pull latest Portainer docker image!"
-    if sudo docker run -d -p 9000:9000 -p 9443:9443 --name=portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce; then
+    docker pull portainer/portainer-ce >/dev/null || error "Failed to pull latest Portainer docker image!"
+    if docker run -d -p 9000:9000 -p 9443:9443 --name=portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce; then
         success 'Portainer container deployed\n'
     else
-        error 'Failed to execute newer version of Portainer!'
+        error 'Failed to run Portainer docker image!'
     fi
-
 }
 
 # 0 Check internet connection
